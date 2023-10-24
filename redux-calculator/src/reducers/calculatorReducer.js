@@ -1,36 +1,48 @@
 import { PRESS_NUM, SET_OPERATION, EQUAL, CLEAR } from "../actions";
 
+// O estado inicial da calculadora.
 const initialState = {
-  displayValue: "0",
-  operator: null,
-  previousValue: null,
+  expression: '', // A expressão completa a ser exibida, incluindo números e operadores.
+  previousValue: null, // O último valor calculado ou inserido, para uso em operações contínuas.
+  operation: null, // A operação atual a ser aplicada.
 };
 
+// O reducer que atualiza o estado da calculadora com base nas ações recebidas.
 export const calculatorReducer = (state = initialState, action) => {
   switch (action.type) {
     case PRESS_NUM:
+      // Adiciona o número pressionado à expressão atual.
       return {
         ...state,
-        displayValue: state.displayValue === "0" ? action.payload.toString() : state.displayValue + action.payload,
+        expression: state.expression + action.payload.toString(),
       };
     case SET_OPERATION:
+      // Adiciona o operador à expressão e define a operação atual.
+      // Se um operador já estiver definido, ele é substituído.
+      const lastChar = state.expression.slice(-1);
+      let newExpression = state.expression;
+      if (['+', '-', '*', '/'].includes(lastChar)) {
+        newExpression = state.expression.slice(0, -1) + action.payload;
+      } else {
+        newExpression = state.expression + ' ' + action.payload + ' ';
+      }
+
       return {
         ...state,
-        previousValue: state.displayValue,
-        displayValue: "0",
-        operator: action.payload,
+        expression: newExpression,
+        operation: action.payload,
       };
     case EQUAL:
-      const current = parseFloat(state.displayValue);
-      const previous = parseFloat(state.previousValue);
-      const result = eval(`${previous} ${state.operator} ${current}`);
+      // Calcula o resultado com base na expressão, atualiza a expressão com este resultado.
+      const result = eval(state.expression).toString();
       return {
         ...state,
-        displayValue: result.toString(),
-        operator: null,
-        previousValue: null,
+        expression: result,
+        previousValue: result,
+        operation: null,
       };
     case CLEAR:
+      // Limpa o estado, revertendo para o estado inicial.
       return initialState;
     default:
       return state;
